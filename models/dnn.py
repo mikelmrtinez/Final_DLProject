@@ -202,3 +202,53 @@ class Network_4(nn.Module):
         output = F.relu(self.fc3(x_cat))
        
         return output
+
+class Network_lstm(nn.Module):
+    def __init__(self, x_dim, x_t_dim, h_cell, num_lstm, hidden_dim=128):
+        super(Network_lstm, self).__init__()
+       
+        
+    
+        self.lstm = nn.LSTM(input_size = x_t_dim[1], hidden_size = h_cell, 
+                            num_layers = num_lstm, dropout = 0.2)
+        self.fc_lstm = nn.Linear(h_cell*x_t_dim[2], hidden_dim//8)
+        
+        concat_size = hidden_dim//8 + x_dim[1]
+        self.fc1 = nn.Linear(concat_size, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim//2)
+        self.fc3 = nn.Linear(hidden_dim//2, 1) 
+
+        
+        self.dropout = nn.Dropout(p=0.33)
+        self.relu = nn.ReLU()
+        self.full_bn = nn.BatchNorm1d(concat_size)
+        self.bn_before_conv = nn.BatchNorm1d(x_t_dim[1])
+        self._hidden_lstm = h_cell
+        self.flatten = nn.Flatten()
+        self._num_layers = num_lstm
+    
+    def forward(self, x, x_t):
+        
+        x_t = self.bn_before_conv(x_t)
+        x_t = x_t.permute(2,0,1)
+        
+        h0 = torch.randn(self._num_layers, x_t.shape[1], self._hidden_lstm)
+        c0 = torch.randn(self._num_layers, x_t.shape[1], self._hidden_lstm)
+    
+        x_t = self.lstm(x_t, (h0, c0))[0]
+        
+        x_t = x_t.permute(1,2,0)
+        x_t = self.flatten(x_t)       
+        x_t = self.fc_lstm(x_t)        
+        
+        x_cat = torch.cat((x_t, x), 1)
+        
+        x_cat = self.full_bn(x_cat)
+        
+        x_cat = F.relu(self.fc1(x_cat))
+        x_cat = self.dropout(x_cat)
+        x_cat = F.relu(self.fc2(x_cat))
+        x_cat = self.dropout(x_cat)
+        output = F.relu(self.fc3(x_cat))
+       
+        return output

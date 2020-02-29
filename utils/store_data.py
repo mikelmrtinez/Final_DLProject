@@ -26,22 +26,26 @@ test_data_clean = remove_uninformative_features(test_data)
 train_loss = extractDataAsTensor(train_data, "Train/loss").unsqueeze(1)
 train_acc = extractDataAsTensor(train_data, "Train/train_accuracy").unsqueeze(1)
 train_val_acc=extractDataAsTensor(train_data, "Train/val_accuracy").unsqueeze(1)
+train_grad = extractDataAsTensor(train_data, "Train/gradient_norm").unsqueeze(1)
 
 
 val_loss = extractDataAsTensor(val_data, "Train/loss").unsqueeze(1)
 val_acc = extractDataAsTensor(val_data, "Train/train_accuracy").unsqueeze(1)
 val_val_acc = extractDataAsTensor(val_data, "Train/val_accuracy").unsqueeze(1)
+val_grad = extractDataAsTensor(val_data, "Train/gradient_norm").unsqueeze(1)
 
 
 
 test_loss = extractDataAsTensor(test_data_clean, "Train/loss").unsqueeze(1)
 test_acc = extractDataAsTensor(test_data_clean, "Train/train_accuracy").unsqueeze(1)
 test_val_acc = extractDataAsTensor(test_data_clean, "Train/val_accuracy").unsqueeze(1)
+test_grad = extractDataAsTensor(test_data_clean, "Train/gradient_norm").unsqueeze(1)
 
 
-train_temporal_data = torch.cat((train_loss, train_acc, train_val_acc), 1)
-val_temporal_data = torch.cat((val_loss, val_acc, val_val_acc), 1)
-test_temporal_data = torch.cat((test_loss, test_acc, test_val_acc), 1)
+
+train_temporal_data = torch.cat((train_loss, train_acc, train_val_acc, train_grad), 1)
+val_temporal_data = torch.cat((val_loss, val_acc, val_val_acc, val_grad), 1)
+test_temporal_data = torch.cat((test_loss, test_acc, test_val_acc, test_grad), 1)
 
 train_data_tensor = DictToTensor(train_data_clean, "config")
 val_data_tensor = DictToTensor(val_data_clean, "config")

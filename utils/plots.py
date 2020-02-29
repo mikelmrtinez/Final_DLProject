@@ -16,6 +16,5 @@ def plot_evolution (train_hist, val_hist, path):
     plt.ylabel('mse loss')
     plt.ylim(-10, 60)
     plt.grid()
-    plt.show()
     plt.savefig(path)
-    
+    plt.show()

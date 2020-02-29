@@ -6,6 +6,8 @@ Created on Tue Feb 25 18:24:42 2020
 """
 import torch
 from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+
 
 class Model():
     def __init__(self, model, max_epochs, btch_size, loss, optimizer, scheduler, step_lr, gamma, path, path_model= None):
@@ -16,7 +18,6 @@ class Model():
         self._model = model
         self._scheduler = scheduler
         self._path = path
-        
         if path_model != None:
             checkpoint = torch.load(path_model)
             self._model.load_state_dict(checkpoint['model_state_dict'])
@@ -67,12 +68,13 @@ class Model():
         return train_loss_history, val_loss_history
     
     def test(self, test_data, test_temporal, test_targets):
- 
         with torch.no_grad():
-            self._model.eval()        
+            self._model.eval()
             predicted = self._model(test_data, test_temporal)
             score = mean_squared_error(predicted, test_targets)
-        print("The MSE on Test dataset : ", score)
+        print("The MSE on Test : ", score)
+        plt.scatter(test_targets, predicted)
+        plt.show()
         
         
         
