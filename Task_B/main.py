@@ -14,33 +14,33 @@ from models.model_kfold_cross_validation import Model
 from utils.plots import plot_evolution
 
 
-config_train = torch.load('./data/config_train.pt')#.unsqueeze(2)
-meta_train = torch.FloatTensor(torch.load('./data/meta_train.pt'))#.unsqueeze(2)
-y_train = torch.load( './data/y_train.pt')
+config_train = torch.load('./data/config_train.pt')  # .unsqueeze(2)
+meta_train = torch.FloatTensor(torch.load('./data/meta_train.pt'))  # .unsqueeze(2)
+y_train = torch.load('./data/y_train.pt')
 
-config_val = torch.load('./data/config_val.pt')#.unsqueeze(2)
-meta_val = torch.FloatTensor(torch.load( './data/meta_val.pt'))#.unsqueeze(2)
+config_val = torch.load('./data/config_val.pt')  # .unsqueeze(2)
+meta_val = torch.FloatTensor(torch.load('./data/meta_val.pt'))  # .unsqueeze(2)
 y_val = torch.load('./data/y_val.pt')
 
-config_test= torch.load('./data/config_test.pt')#.unsqueeze(2)
-meta_test = torch.FloatTensor(torch.load('./data/meta_test.pt'))#.unsqueeze(2)
-y_test = torch.load( './data/y_test.pt')
+config_test = torch.load('./data/config_test.pt')  # .unsqueeze(2)
+meta_test = torch.FloatTensor(torch.load('./data/meta_test.pt'))  # .unsqueeze(2)
+y_test = torch.load('./data/y_test.pt')
 
-#Initialize CNN
+# Initialize CNN
 config_size = config_train.shape[1]
 meta_size = meta_train.shape[1]
 
 net = Network_1(config_size, meta_size)
 print(net)
 
-#Name the model to train
+# Name the model to train
 name_train = "metaonly_deep_"
 path = "./results/models/"+name_train
 
-#Set Hyperparameters for the model
+# Set Hyperparameters for the model
 max_epochs = 2500
 batch_size = 64
-kfolds = 1
+kfolds = 2
 loss = nn.MSELoss(reduction='mean')
 optimizer = optim.Adam(net.parameters(), lr=0.0005)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)
@@ -50,7 +50,7 @@ hidden_lstm = 3
 
 model = Model(net, max_epochs, batch_size, loss, optimizer, scheduler, step_lr, gamma, kfolds, path)
 
-train_hist, val_hist = model.train(config_train, meta_train, y_train, 
+train_hist, val_hist = model.train(config_train, meta_train, y_train,
                                    config_val, meta_val, y_val)
 
 np.save('results/stats/train_hist_'+name_train, train_hist)
