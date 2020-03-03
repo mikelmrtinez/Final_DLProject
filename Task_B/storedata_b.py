@@ -12,19 +12,20 @@ import json
 import pandas as pd
 import numpy as np
 
+
 def getmetadata(x, names, metadata):
-    
     for i in range(len(x)):
         name = names[i]
         vec = np.zeros((len(x), 62))
         j = 0
         for key, val in metadata[name].items():
             vec[i, j] = val
-            if j>60:
+            if j > 60:
                 break
-            j +=1
+            j += 1
     return vec
-            
+
+
 def cleanNan(x):
     df = pd.DataFrame(x)
     df = df.dropna(axis='columns')
@@ -32,8 +33,8 @@ def cleanNan(x):
 
 
 bench_dir = "./data/six_datasets_lw.json"
-    
-    
+
+
 train_datasets = ['adult', 'higgs', 'vehicle', 'volkert']
 test_datasets = ['Fashion-MNIST', 'jasmine']
 
@@ -60,18 +61,17 @@ X_train_tensor = DictToTensor(X_train_clean)
 X_val_tensor = DictToTensor(X_val_clean)
 X_test_tensor = DictToTensor(X_test_clean)
 
-y_train = torch.FloatTensor(y_train).reshape(-1,1)
-y_val = torch.FloatTensor(y_val).reshape(-1,1)
-y_test = torch.FloatTensor(y_test).reshape(-1,1)
-
+y_train = torch.FloatTensor(y_train).reshape(-1, 1)
+y_val = torch.FloatTensor(y_val).reshape(-1, 1)
+y_test = torch.FloatTensor(y_test).reshape(-1, 1)
 
 
 with open("data/metafeatures.json", "r") as f:
     metafeatures = json.load(f)
-    
+
 print('Getting MetaFeatures...\n')
 
-    
+
 meta_train = getmetadata(X_train, dataset_names_train, metafeatures)
 meta_val = getmetadata(X_val, dataset_names_val, metafeatures)
 meta_test = getmetadata(X_test, dataset_names_test, metafeatures)
@@ -90,7 +90,7 @@ print(meta_test.shape)
 print(meta_val_clean.shape)
 print(meta_val.shape)
 
-torch.save(X_train_tensor, './data/config_train.pt') #and torch.load('file.pt')
+torch.save(X_train_tensor, './data/config_train.pt')  # and torch.load('file.pt')
 torch.save(meta_train_clean, './data/meta_train.pt')
 torch.save(y_train, './data/y_train.pt')
 torch.save(X_val_tensor, './data/config_val.pt')
@@ -99,4 +99,3 @@ torch.save(y_val, './data/y_val.pt')
 torch.save(X_test_tensor, './data/config_test.pt')
 torch.save(meta_test_clean, './data/meta_test.pt')
 torch.save(y_test, './data/y_test.pt')
-

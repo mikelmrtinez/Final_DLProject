@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Mar  1 19:05:20 2020
-
-@author: Mikel
-"""
-
 import torch
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt

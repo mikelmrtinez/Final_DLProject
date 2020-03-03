@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Mar  1 19:05:20 2020
-
-@author: Mikel
-"""
-
 import torch
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
+import json
+import numpy as np
+from sklearn.metrics.pairwise import cosine_distances
 
 
 class Model():
@@ -19,6 +16,7 @@ class Model():
         self._model = model
         self._scheduler = scheduler
         self._path = path
+        print(path)
         if path_model != None:
             checkpoint = torch.load(path_model)
             self._model.load_state_dict(checkpoint['model_state_dict'])
@@ -37,7 +35,7 @@ class Model():
             for indx in range(steps):
                 self._opt.zero_grad()
                 outputs = self._model(config_train[indx*self._batch_size:(indx+1)*self._batch_size, :],
-                                      meta_train[indx*self._batch_size:(indx+1)*self._batch_size, :])
+                                      similarity(meta_train[indx*self._batch_size:(indx+1)*self._batch_size, :]))
 
                 loss = self._loss(outputs, y_train[indx*self._batch_size:(indx+1)*self._batch_size, :])
                 loss.backward()
@@ -50,7 +48,7 @@ class Model():
                     train_loss_history.append(running_loss/(steps*50))
                     with torch.no_grad():
                         self._model.eval()
-                        predicted = self._model(config_val, meta_val)
+                        predicted = self._model(config_val, similarity(meta_val))
                         score = mean_squared_error(predicted, y_val)
                         val_loss_history.append(score)
 
@@ -70,8 +68,23 @@ class Model():
     def test(self, test_data, test_temporal, test_targets):
         with torch.no_grad():
             self._model.eval()
-            predicted = self._model(test_data, test_temporal)
+            predicted = self._model(test_data, similarity(test_temporal))
             score = mean_squared_error(predicted, test_targets)
         print("The MSE on Test : ", score)
         plt.scatter(test_targets, predicted)
         plt.show()
+
+
+def similarity(meta_features):
+    with open("./data/metafeatures.json", "r") as f:
+        metafeatures = json.load(f)
+    used_meta = [k for k, v in metafeatures['higgs'].items() if not np.isnan(v)]
+    batch_similarities = []
+    for metafeature in meta_features:
+        similarities = []
+        for dataset in 'adult', 'higgs', 'vehicle', 'volkert':
+            meta = {k: v for k, v in metafeatures[dataset].items() if k in used_meta}
+            train_meta_vector = np.array(list(meta.values())).reshape(1, len(used_meta))
+            similarities.append(1 - cosine_distances(train_meta_vector, meta_features).squeeze().item(0))
+        batch_similarities.append(similarities)
+    return torch.Tensor(batch_similarities)
