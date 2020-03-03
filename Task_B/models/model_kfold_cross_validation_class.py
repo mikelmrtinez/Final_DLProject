@@ -16,7 +16,7 @@ class Model():
     def __init__(self, model, max_epochs, btch_size, loss_reg, loss_class, optimizer, scheduler, step_lr, gamma, kfolds, path, path_model= None):
         self._max_epochs = max_epochs
         self._batch_size = btch_size
-        self._loss = loss_reg
+        self._loss_reg = loss_reg
         self._loss_class = loss_class
         self._opt = optimizer
         self._model = model
@@ -42,25 +42,31 @@ class Model():
             for epoch in range(1,self._max_epochs):
                 for indx in range(steps):
                     self._opt.zero_grad()
-                    outputs = self._model(x_config[indx*self._batch_size:(indx+1)*self._batch_size, :],
-                                                       x_meta[indx*self._batch_size:(indx+1)*self._batch_size, :])
+                    outputs_reg, output_class = self._model(x_config[indx*self._batch_size:(indx+1)*self._batch_size, :],
+                                                       x_meta[indx*self._batch_size:(indx+1)*self._batch_size, :-1])
                                                             
-                    loss = self._loss(outputs, y_t[indx*self._batch_size:(indx+1)*self._batch_size, :])
+                    loss_reg = self._loss_reg(outputs_reg, y_t[indx*self._batch_size:(indx+1)*self._batch_size, :])
+                    #print(x_meta[indx*self._batch_size:(indx+1)*self._batch_size, -1:].squeeze().shape)
+                    #print(output_class.shape)
+                    loss_class = self._loss_class(output_class, x_meta[indx*self._batch_size:(indx+1)*self._batch_size, -1:].squeeze().type(torch.LongTensor))
+                    loss = 0.01*loss_reg + loss_class
                     loss.backward()
                     self._opt.step()
                     self._scheduler.step(epoch + indx/steps) 
-                    running_loss += loss.item()
+                    running_loss += loss_reg.item()
                     if epoch % 5 == 0 and indx == 0:    # print every 1000 mini-batches
                         
                         train_loss_history.append(running_loss/(steps*5))
                         with torch.no_grad():
                             self._model.eval()
-                            predicted_reg = self._model(val_config, val_meta)
+                            predicted_reg, pred_class = self._model(val_config, val_meta[:,:-1])
                             score = mean_squared_error(predicted_reg, y_v)
+                            pred_class = torch.argmax(pred_class, dim=1)
+                            accuracy = accuracy_score(pred_class, val_meta[:,-1:])
                             val_loss_history.append(score)
                             
-                        print('[%d / %5d] train_reg_loss: %.3f val_reg_loss: %.3f ' %
-                              (epoch , self._max_epochs, running_loss/(steps*5), score))
+                        print('[%d / %5d] train_reg_loss: %.3f train_class_loss: %.3f val_reg_loss: %.3f val_acc: %.3f ' %
+                              (epoch , self._max_epochs, running_loss/(steps*5), loss_class, score, accuracy))
                         running_loss = 0.0
                     if epoch % 100 == 0 :
                         torch.save({
@@ -130,12 +136,13 @@ class Model():
         print(self._model)
         with torch.no_grad():
             self._model.eval()
-            predicted, _ = self._model(test_data, test_temporal)
+            predicted, _ = self._model(test_data, test_temporal[:,:-1])
             print(predicted.shape)
             print(test_targets.shape)
             score = mean_squared_error(predicted, test_targets)
         print("The MSE on Test : ", score)
         plt.scatter(test_targets, predicted)
+    
         plt.show()
         
         

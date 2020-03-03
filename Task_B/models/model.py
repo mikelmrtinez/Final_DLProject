@@ -43,7 +43,7 @@ class Model():
                 loss = self._loss(outputs, y_train[indx*self._batch_size:(indx+1)*self._batch_size, :])
                 loss.backward()
                 self._opt.step()
-                #self._scheduler.step(epoch + indx/steps) 
+                self._scheduler.step(epoch + indx/steps) 
                 #self._scheduler.step()
                 running_loss += loss.item()
                 if epoch % 5 == 0 and indx == 0:    # print every 1000 mini-batches

@@ -13,28 +13,41 @@ import pandas as pd
 import numpy as np
 
 def getmetadata(x, names, metadata):
-    
+    labels = []
+    vec = torch.zeros((len(x), 62))
     for i in range(len(x)):
         name = names[i]
-        vec = np.zeros((len(x), 62))
         j = 0
         for key, val in metadata[name].items():
             vec[i, j] = val
             if j>60:
                 break
             j +=1
-    return vec
+        labels.append(name)
+    #print(vec[:10])
+    return vec, labels
             
 def cleanNan(x):
     df = pd.DataFrame(x)
     df = df.dropna(axis='columns')
     return df.values
 
+def one_hot_labels(labels):
+    df = pd.DataFrame({'A':labels})
+    out = df.A.astype('category').cat.codes
+    return out
+
+def categorical_to_int(labels):
+    df = pd.DataFrame({'A':labels})
+    out = df.A.astype('category').cat.codes
+    return out.values.reshape(-1,1)
 
 bench_dir = "./data/six_datasets_lw.json"
     
     
 train_datasets = ['adult', 'higgs', 'vehicle', 'volkert']
+#train_datasets = [ 'adult']
+
 test_datasets = ['Fashion-MNIST', 'jasmine']
 
 
@@ -72,17 +85,25 @@ with open("data/metafeatures.json", "r") as f:
 print('Getting MetaFeatures...\n')
 
     
-meta_train = getmetadata(X_train, dataset_names_train, metafeatures)
-meta_val = getmetadata(X_val, dataset_names_val, metafeatures)
-meta_test = getmetadata(X_test, dataset_names_test, metafeatures)
+meta_train, meta_y_train = getmetadata(X_train, dataset_names_train, metafeatures)
+meta_val, meta_y_val = getmetadata(X_val, dataset_names_val, metafeatures)
+meta_test, meta_y_test = getmetadata(X_test, dataset_names_test, metafeatures)
+
+#meta_y_train_enc = categorical_to_int(meta_y_train)
+#meta_y_val_enc = categorical_to_int(meta_y_val)
+#meta_y_test_enc = categorical_to_int(meta_y_test)
 
 x = np.concatenate((meta_train, meta_test, meta_val), 0)
-print(x.shape)
 x = cleanNan(x)
 meta_train_clean = x[0:meta_train.shape[0]]
 meta_test_clean = x[meta_train.shape[0]:meta_train.shape[0]+meta_test.shape[0]]
 meta_val_clean = x[meta_train.shape[0]+meta_test.shape[0]:]
+#
+#meta_train_clean = np.concatenate((meta_train_clean, meta_y_train_enc), 1)
+#meta_val_clean = np.concatenate((meta_val_clean, meta_y_val_enc), 1)
+#meta_test_clean = np.concatenate((meta_test_clean, meta_y_test_enc), 1)
 
+print('The last 4 feats is the OneHotEnconded labels')
 print(meta_train_clean.shape)
 print(meta_train.shape)
 print(meta_test_clean.shape)
