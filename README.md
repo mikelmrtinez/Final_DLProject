@@ -1,3 +1,14 @@
+# TASK A: Performance predictor of architecture configurations using Learning Curves
+
+The trainig dataset consist on 2000 architecuture configurations and learning curves of different trainings for the FASHIOn-MNIST dataset, with the objective of predicting the final behavior (validation accuracy) at the 50th epoch of traning by only giving the first 10 epochs.
+
+In task A we approach to extract the information from the learning curves with a simple CNN , that works as a feature extractor for the time series data (1-dimensional) of the learning curves. The features are concatenated with the configurations as input for the regressor modeled with a FCNN.
+
+# TASK B: Performance predictor of architecture configurations in unseen datasets
+
+The training data set consit on 2000 architectures of 4 different datasets with their respective meta-features. The objective is to predict the behavior of the training (validation accuracy) of unseen dataset and configurations.
+
+
 # LCBench
 
 A learning curve benchmark on openml data.
