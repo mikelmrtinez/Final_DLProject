@@ -4,7 +4,7 @@ The trainig dataset consist on 2000 architecuture configurations and learning cu
 
 In task A we approach to extract the information from the learning curves with a simple CNN , that works as a feature extractor for the time series data (1-dimensional) of the learning curves. The features are concatenated with the configurations as input for the regressor modeled with a FCNN.
 
-# TASK B: Performance predictor of architecture configurations in unseen datasets
+# TASK B: Performance predictor of architecture configurations in unseen datasets using Meta-Features
 
 The training data set consit on 2000 architectures of 4 different datasets with their respective meta-features. The objective is to predict the behavior of the training (validation accuracy) of unseen dataset and configurations.
 
